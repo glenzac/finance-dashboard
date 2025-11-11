@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+
+{% block title %}User Management - {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1><i class="fas fa-users"></i> User Management</h1>
+                <a href="{{ url_for('users.add') }}" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Add New User
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card border-primary">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="fas fa-user-check text-success"></i> Active Users
+                    </h5>
+                    <h2 class="mb-0">{{ active_count }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card border-secondary">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="fas fa-users text-secondary"></i> Total Users
+                    </h5>
+                    <h2 class="mb-0">{{ total_count }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Users List -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-list"></i> All Users</h5>
+                </div>
+                <div class="card-body">
+                    {% if users %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Name</th>
+                                        <th>Email</th>
+                                        <th>Color</th>
+                                        <th>Status</th>
+                                        <th>Created</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for user in users %}
+                                    <tr>
+                                        <td>{{ user.id }}</td>
+                                        <td>
+                                            <span class="badge" style="background-color: {{ user.color }}; color: white;">
+                                                {{ user.name }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            {% if user.email %}
+                                                <a href="mailto:{{ user.email }}">{{ user.email }}</a>
+                                            {% else %}
+                                                <span class="text-muted">-</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div style="width: 30px; height: 30px; background-color: {{ user.color }}; border-radius: 5px; border: 1px solid #dee2e6;"></div>
+                                                <span class="ms-2 text-muted">{{ user.color }}</span>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            {% if user.is_active %}
+                                                <span class="badge bg-success">Active</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">Inactive</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ user.created_at[:10] if user.created_at else '-' }}</td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm" role="group">
+                                                <a href="{{ url_for('users.edit', user_id=user.id) }}"
+                                                   class="btn btn-outline-primary" title="Edit">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+
+                                                {% if user.id != 1 %}
+                                                    {% if user.is_active %}
+                                                        <form action="{{ url_for('users.delete', user_id=user.id) }}"
+                                                              method="POST"
+                                                              style="display: inline;"
+                                                              onsubmit="return confirm('Are you sure you want to deactivate this user?');">
+                                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                                            <button type="submit" class="btn btn-outline-danger" title="Deactivate">
+                                                                <i class="fas fa-user-slash"></i>
+                                                            </button>
+                                                        </form>
+                                                    {% else %}
+                                                        <form action="{{ url_for('users.activate', user_id=user.id) }}"
+                                                              method="POST"
+                                                              style="display: inline;">
+                                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                                            <button type="submit" class="btn btn-outline-success" title="Activate">
+                                                                <i class="fas fa-user-check"></i>
+                                                            </button>
+                                                        </form>
+                                                    {% endif %}
+                                                {% else %}
+                                                    <button class="btn btn-outline-secondary" disabled title="Cannot delete default user">
+                                                        <i class="fas fa-lock"></i>
+                                                    </button>
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="text-muted mb-0">No users found. This shouldn't happen - at least the default user should exist.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Help Info -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card border-info">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-info-circle"></i> About Users</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="mb-0">
+                        <li>Each banking instrument must be assigned to a user</li>
+                        <li>Transactions are automatically linked to users through their banking instruments</li>
+                        <li>You can filter all views (dashboard, reports, search) by one or multiple users</li>
+                        <li>The default user cannot be deleted (but can be renamed)</li>
+                        <li>User colors help visually distinguish users in charts and lists</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

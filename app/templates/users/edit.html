@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+
+{% block title %}Edit User - {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="mb-0"><i class="fas fa-user-edit"></i> Edit User: {{ user.name }}</h3>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('users.edit', user_id=user.id) }}">
+                        {{ form.hidden_tag() }}
+
+                        <!-- User ID Display -->
+                        <div class="mb-3">
+                            <label class="form-label">User ID</label>
+                            <input type="text" class="form-control" value="{{ user.id }}" disabled>
+                            <div class="form-text">Unique identifier (cannot be changed)</div>
+                        </div>
+
+                        <!-- Name -->
+                        <div class="mb-3">
+                            {{ form.name.label(class="form-label") }}
+                            <span class="text-danger">*</span>
+                            {{ form.name(class="form-control" + (" is-invalid" if form.name.errors else "")) }}
+                            {% if form.name.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.name.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            {% if user.id == 1 %}
+                                <div class="form-text">This is the default user - can be renamed but not deleted</div>
+                            {% else %}
+                                <div class="form-text">Unique name for this user</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Email -->
+                        <div class="mb-3">
+                            {{ form.email.label(class="form-label") }}
+                            {{ form.email(class="form-control" + (" is-invalid" if form.email.errors else "")) }}
+                            {% if form.email.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.email.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">Optional email address for the user</div>
+                        </div>
+
+                        <!-- Color -->
+                        <div class="mb-3">
+                            {{ form.color.label(class="form-label") }}
+                            <span class="text-danger">*</span>
+                            <div class="d-flex align-items-center">
+                                {{ form.color(class="form-control form-control-color" + (" is-invalid" if form.color.errors else ""), style="width: 100px;") }}
+                                <span class="ms-2 text-muted" id="colorValue">{{ user.color }}</span>
+                            </div>
+                            {% if form.color.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.color.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">Color to visually identify this user in charts and badges</div>
+                        </div>
+
+                        <!-- Active Status -->
+                        <div class="mb-3">
+                            <div class="form-check">
+                                {{ form.is_active(class="form-check-input") }}
+                                {{ form.is_active.label(class="form-check-label") }}
+                            </div>
+                            <div class="form-text">Inactive users won't appear in dropdowns but their data remains</div>
+                        </div>
+
+                        <!-- Buttons -->
+                        <div class="d-flex justify-content-between mt-4">
+                            <a href="{{ url_for('users.index') }}" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> Cancel
+                            </a>
+                            {{ form.submit(class="btn btn-primary") }}
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Color Suggestions -->
+            <div class="card mt-3">
+                <div class="card-body">
+                    <h6 class="card-title">Suggested Colors:</h6>
+                    <div class="d-flex flex-wrap gap-2">
+                        {% set color_suggestions = [
+                            "#007bff",  "#6c757d",  "#28a745",  "#dc3545",
+                            "#ffc107",  "#17a2b8",  "#e83e8c",  "#6f42c1",
+                            "#fd7e14",  "#20c997",  "#343a40",  "#f8f9fa"
+                        ] %}
+                        {% for color in color_suggestions %}
+                            <button type="button"
+                                    class="btn btn-sm"
+                                    style="width: 40px; height: 40px; background-color: {{ color }}; border: 2px solid #dee2e6;"
+                                    onclick="document.getElementById('color').value='{{ color }}'; document.getElementById('colorValue').textContent='{{ color }}';"
+                                    title="{{ color }}">
+                            </button>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- User Info -->
+            <div class="card mt-3">
+                <div class="card-body">
+                    <h6 class="card-title">User Information:</h6>
+                    <ul class="mb-0">
+                        <li><strong>Created:</strong> {{ user.created_at if user.created_at else 'N/A' }}</li>
+                        <li><strong>Status:</strong>
+                            {% if user.is_active %}
+                                <span class="badge bg-success">Active</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Inactive</span>
+                            {% endif %}
+                        </li>
+                        {% if user.id == 1 %}
+                            <li class="text-muted">This is the default user and cannot be deleted</li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Update color value display when color picker changes
+    document.getElementById('color').addEventListener('input', function(e) {
+        document.getElementById('colorValue').textContent = e.target.value;
+    });
+</script>
+{% endblock %}
