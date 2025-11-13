@@ -1,0 +1,203 @@
+{% extends "base.html" %}
+
+{% block title %}Banking Instruments - {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="mb-4">
+                <i class="fas fa-university"></i> Banking Instruments
+            </h1>
+            <p class="text-muted">Manage your bank accounts and credit cards</p>
+        </div>
+    </div>
+
+    <!-- Add New Instrument Form -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="fas fa-plus"></i> Add New Instrument</h5>
+        </div>
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('settings.add_instrument') }}">
+                {{ add_form.csrf_token }}
+
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="mb-3">
+                            {{ add_form.instrument_key.label(class="form-label") }}
+                            {{ add_form.instrument_key(class="form-control" + (" is-invalid" if add_form.instrument_key.errors else "")) }}
+                            {% if add_form.instrument_key.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in add_form.instrument_key.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                            <small class="form-text text-muted">Lowercase, numbers, and underscores only</small>
+                        </div>
+                    </div>
+
+                    <div class="col-md-3">
+                        <div class="mb-3">
+                            {{ add_form.name.label(class="form-label") }}
+                            {{ add_form.name(class="form-control" + (" is-invalid" if add_form.name.errors else "")) }}
+                            {% if add_form.name.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in add_form.name.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="col-md-3">
+                        <div class="mb-3">
+                            {{ add_form.type.label(class="form-label") }}
+                            {{ add_form.type(class="form-select" + (" is-invalid" if add_form.type.errors else "")) }}
+                            {% if add_form.type.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in add_form.type.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="col-md-3">
+                        <div class="mb-3">
+                            {{ add_form.parser.label(class="form-label") }}
+                            {{ add_form.parser(class="form-select" + (" is-invalid" if add_form.parser.errors else "")) }}
+                            {% if add_form.parser.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in add_form.parser.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                            <small class="form-text text-muted">For automatic statement parsing</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            {{ add_form.user_id.label(class="form-label") }}
+                            <span class="text-danger">*</span>
+                            {{ add_form.user_id(class="form-select" + (" is-invalid" if add_form.user_id.errors else "")) }}
+                            {% if add_form.user_id.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in add_form.user_id.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                            <small class="form-text text-muted">Select the user who owns this banking instrument</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-12">
+                        {{ add_form.submit(class="btn btn-primary") }}
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Existing Instruments -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="fas fa-list"></i> Existing Instruments ({{ instruments|length }})</h5>
+        </div>
+        <div class="card-body">
+            {% if instruments %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Key</th>
+                                <th>Name</th>
+                                <th>Type</th>
+                                <th>Owner</th>
+                                <th>Parser</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for key, details in instruments.items() %}
+                            <tr>
+                                <td><code>{{ key }}</code></td>
+                                <td><strong>{{ details.name }}</strong></td>
+                                <td>
+                                    <span class="badge bg-info">{{ details.type }}</span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-secondary">{{ details.user_name if details.user_name else 'Default User' }}</span>
+                                </td>
+                                <td>
+                                    {% if details.parser %}
+                                        <span class="badge bg-success">{{ details.parser }}</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Manual</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-end">
+                                    <a href="{{ url_for('settings.edit_instrument', instrument_key=key) }}"
+                                       class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-edit"></i> Edit
+                                    </a>
+                                    <button type="button" class="btn btn-sm btn-outline-danger"
+                                            onclick="confirmDelete('{{ key }}', '{{ details.name }}')">
+                                        <i class="fas fa-trash"></i> Delete
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i>
+                    No banking instruments configured yet. Add one using the form above.
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div class="modal fade" id="deleteModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Confirm Delete</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to delete the banking instrument <strong id="deleteName"></strong>?</p>
+                    <p class="text-danger">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <strong>Warning:</strong> Existing transactions will remain, but you won't be able to add new transactions to this instrument.
+                    </p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <form id="deleteForm" method="POST" style="display: inline;">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-trash"></i> Delete Instrument
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function confirmDelete(key, name) {
+    document.getElementById('deleteName').textContent = name;
+    document.getElementById('deleteForm').action = "{{ url_for('settings.delete_instrument', instrument_key='PLACEHOLDER') }}".replace('PLACEHOLDER', key);
+
+    const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
+    modal.show();
+}
+</script>
+{% endblock %}
